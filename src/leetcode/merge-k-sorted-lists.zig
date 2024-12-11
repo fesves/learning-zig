@@ -26,7 +26,11 @@ pub const KSortedLists = struct {
     pub fn printResult(self: *Self) void {
         var current = self.result;
         while (current) |node| {
-            std.debug.print("{} -> ", .{node.val});
+            if (node.next != null) {
+                std.debug.print("{} -> ", .{node.val});
+            } else {
+                std.debug.print("{} ", .{node.val});
+            }
             current = node.next;
         }
     }
@@ -47,19 +51,16 @@ pub const KSortedLists = struct {
                 if (resultItem.*.next == null) {
                     resultItem.*.next = insertion;
                     currentInsertion = insertion.*.next;
+                    resultItem.*.next = null;
                 } else {
                     if (resultItem.*.next) |next| if (next.*.val > insertion.*.val) {
-                        // code...
-                        const currentNext = next;
-                        resultItem.*.next = insertion;
-                        insertion.*.next = currentNext; // change thid directly to next and remove line 53
                         currentInsertion = insertion.*.next;
+                        resultItem.*.next = insertion;
+                        insertion.*.next = next;
                     };
                 }
-
                 currentResultItem = resultItem.*.next;
             } else {
-                std.debug.print("error happened\n", .{});
                 break;
             }
         }
