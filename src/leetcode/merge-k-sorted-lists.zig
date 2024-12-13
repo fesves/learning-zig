@@ -16,10 +16,9 @@ pub const KSortedLists = struct {
             return self;
         }
 
-        self.result = data[0];
-        if (length >= 1) for (data[1..]) |item| {
+        for (data) |item| {
             self.insert(item);
-        };
+        }
         return self;
     }
 
@@ -35,34 +34,47 @@ pub const KSortedLists = struct {
         }
     }
 
+    pub fn getResult(self: *Self) ?*LinkedList {
+        return self.result;
+    }
+
     fn insert(self: *Self, item: *LinkedList) void {
+        // Early return the first list if result is null
+        if (self.result == null) {
+            self.result = item;
+            return;
+        }
+
         var currentInsertion: ?*LinkedList = item;
-
-        if (self.result) |result| if (currentInsertion) |insertion| if (result.*.val > insertion.*.val) {
-            const temp = insertion.*.next;
-            insertion.*.next = result;
-            self.result = insertion;
+        var currentResultItem = self.result.?;
+        // Given that "lists[i] is sorted in ascending order," we only need to check
+        //if the item is greater than the first item in the result during the first iteration.
+        if (currentResultItem.*.val > item.*.val) {
+            const temp = item.*.next;
+            item.*.next = currentResultItem;
+            self.result = item;
             currentInsertion = temp;
-        };
+        }
 
-        var currentResultItem = self.result;
         while (currentInsertion) |insertion| {
-            if (currentResultItem) |resultItem| {
-                if (resultItem.*.next == null) {
-                    resultItem.*.next = insertion;
-                    currentInsertion = insertion.*.next;
-                    resultItem.*.next = null;
-                } else {
-                    if (resultItem.*.next) |next| if (next.*.val > insertion.*.val) {
-                        currentInsertion = insertion.*.next;
-                        resultItem.*.next = insertion;
-                        insertion.*.next = next;
-                    };
-                }
-                currentResultItem = resultItem.*.next;
-            } else {
-                break;
+            if (currentResultItem.*.next == null) {
+                currentInsertion = insertion.*.next;
+                insertion.*.next = null;
+                currentResultItem.*.next = insertion;
+                currentResultItem = insertion;
+                continue;
             }
+
+            const next = currentResultItem.*.next.?;
+            if (next.*.val > insertion.*.val) {
+                currentInsertion = insertion.*.next;
+                insertion.*.next = next;
+                currentResultItem.*.next = insertion;
+                currentResultItem = insertion;
+                continue;
+            }
+
+            currentResultItem = next;
         }
     }
 };
