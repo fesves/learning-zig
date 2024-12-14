@@ -10,6 +10,7 @@ pub fn main() !void {
     _ = try kSortedRunner.init();
     defer kSortedRunner.deinit();
     kSortedRunner.run();
+    std.debug.print("finished: {}\n ", .{9});
 
     // stdout is for the actual output of your application, for example if you
     // are implementing gzip, then only the compressed bytes should be sent to

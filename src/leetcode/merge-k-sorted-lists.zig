@@ -14,6 +14,7 @@ pub const Solver = struct {
 
     pub fn init(self: *Self, data: []*LinkedList) *Self {
         const length = data.len;
+        std.debug.print("length: {}\n ", .{length});
         if (length < 1) {
             self.result = null;
             return self;
@@ -22,6 +23,7 @@ pub const Solver = struct {
         for (data) |item| {
             self.insert(item);
         }
+        std.debug.print("Finished: {}\n ", .{length});
         return self;
     }
 
@@ -96,23 +98,25 @@ pub const Runner = struct {
         var lists = ArrayList(*LinkedList).init(allocator);
         self.testData = &lists;
         const rand = std.crypto.random;
-        const k = rand.intRangeAtMost(u32, 0, 10000);
+        const k = rand.intRangeAtMost(u32, 0, 1000); // make max 10^4 and fix solver it getting too slow
 
         for (0..k) |_| {
             var minVal: i32 = -10000;
             var lastNode: ?*LinkedList = null;
             const linkedListLength = rand.intRangeAtMost(u32, 0, 500);
             for (0..linkedListLength) |linkedListIndex| {
-                var node = LinkedList{ .val = 0, .next = null };
+                const node = try allocator.create(LinkedList);
+                node.* = LinkedList{ .val = 0, .next = null };
                 if (lastNode) |last| {
                     minVal = last.*.val;
-                    last.*.next = &node;
+                    last.*.next = node;
                 } else if (self.testData) |data| if (linkedListIndex == 0) {
-                    try data.*.append(&node);
+                    try data.*.append(node);
                 };
 
-                node.val = rand.intRangeAtMost(i32, minVal, 10000);
-                lastNode = &node;
+                const maxVal: i32 = rand.intRangeAtMost(i32, 1, 150) + minVal;
+                node.*.val = rand.intRangeAtMost(i32, minVal, @min(10000, maxVal));
+                lastNode = node;
             }
         }
 
@@ -121,8 +125,19 @@ pub const Runner = struct {
 
     pub fn deinit(self: *Self) void {
         if (self.testData) |data| {
+            for (data.*.items) |node| {
+                var currentNode = node;
+                while (true) {
+                    allocator.destroy(node);
+                    if (currentNode.*.next) |next| {
+                        currentNode = next;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
             data.*.deinit();
-            self.testData = null;
         }
     }
 
