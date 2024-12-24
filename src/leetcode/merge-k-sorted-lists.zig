@@ -10,6 +10,7 @@ pub const LinkedList = struct {
 
 pub const Solver = struct {
     result: ?*LinkedList,
+    // innerMap: std.AutoHashMap(i32, ?*LinkedList),
     const Self = @This();
 
     pub fn init(self: *Self, data: []*LinkedList) *Self {
@@ -23,8 +24,12 @@ pub const Solver = struct {
         for (data) |item| {
             self.insert(item);
         }
-        std.debug.print("Finished: {}\n ", .{length});
+        std.debug.print("\nFinished: {}\n ", .{length});
         return self;
+    }
+
+    pub fn deinit(self: *Self) void {
+        self.result = null;
     }
 
     pub fn printResult(self: *Self) void {
@@ -98,12 +103,14 @@ pub const Runner = struct {
         var lists = ArrayList(*LinkedList).init(allocator);
         self.testData = &lists;
         const rand = std.crypto.random;
-        const k = rand.intRangeAtMost(u32, 0, 1000); // make max 10^4 and fix solver it getting too slow
+        const k = rand.intRangeAtMost(u32, 0, 3); // make max 10^4 and fix solver it getting too slow
 
         for (0..k) |_| {
             var minVal: i32 = -10000;
             var lastNode: ?*LinkedList = null;
             const linkedListLength = rand.intRangeAtMost(u32, 0, 500);
+            const stepSize = @divTrunc(10000, linkedListLength + 1);
+
             for (0..linkedListLength) |linkedListIndex| {
                 const node = try allocator.create(LinkedList);
                 node.* = LinkedList{ .val = 0, .next = null };
@@ -114,8 +121,11 @@ pub const Runner = struct {
                     try data.*.append(node);
                 };
 
-                const maxVal: i32 = rand.intRangeAtMost(i32, 1, 150) + minVal;
-                node.*.val = rand.intRangeAtMost(i32, minVal, @min(10000, maxVal));
+                const step: i32 = @intCast(stepSize);
+                const index: i32 = @intCast(linkedListIndex);
+                const length: i32 = @intCast(linkedListLength);
+                const max: i32 = 10000 - step * (length - index);
+                node.*.val = rand.intRangeAtMost(i32, minVal, @max(max, minVal));
                 lastNode = node;
             }
         }
@@ -126,18 +136,29 @@ pub const Runner = struct {
     pub fn deinit(self: *Self) void {
         if (self.testData) |data| {
             for (data.*.items) |node| {
-                var currentNode = node;
-                while (true) {
-                    allocator.destroy(node);
-                    if (currentNode.*.next) |next| {
-                        currentNode = next;
-                    } else {
-                        break;
-                    }
-                }
+                std.debug.print("\nThird for: {}\n ", .{node.*.val});
             }
 
-            data.*.deinit();
+            std.debug.print("Deinit: {}\n ", .{data.*.items.len});
+
+            // for (data.*.items) |node| {
+            //     var currentNode: ?*LinkedList = node;
+            //     while (currentNode) |current| {
+            //         const next = current.*.next;
+            //         allocator.destroy(current);
+            //         currentNode = next;
+            //     }
+            // }
+
+            // data.*.deinit();
+        }
+    }
+
+    pub fn print(self: *Self) void {
+        if (self.testData) |data| {
+            for (data.*.items) |node| {
+                std.debug.print("\nSecond for : {}\n ", .{node.*.val});
+            }
         }
     }
 
@@ -145,6 +166,11 @@ pub const Runner = struct {
         if (self.testData) |data| {
             var solverInstance = Solver{ .result = null };
             const result = solverInstance.init(data.*.items);
+            defer solverInstance.deinit();
+
+            for (data.*.items) |node| {
+                std.debug.print("\nSecond for : {}\n ", .{node.*.val});
+            }
             result.printResult();
         }
     }

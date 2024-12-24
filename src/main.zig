@@ -6,22 +6,24 @@ const KSortedListsRunner = @import("./leetcode/merge-k-sorted-lists.zig").Runner
 const ArrayList = std.ArrayList;
 
 pub fn main() !void {
-    var kSortedRunner = KSortedListsRunner{ .testData = null };
-    _ = try kSortedRunner.init();
-    defer kSortedRunner.deinit();
-    kSortedRunner.run();
+    var runner = KSortedListsRunner{ .testData = null };
+    var kSortedRunner = &runner;
+    kSortedRunner = try kSortedRunner.*.init();
+    defer kSortedRunner.*.deinit();
+    kSortedRunner.*.run();
+    kSortedRunner.*.print();
     std.debug.print("finished: {}\n ", .{9});
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    // // stdout is for the actual output of your application, for example if you
+    // // are implementing gzip, then only the compressed bytes should be sent to
+    // // stdout, not any debugging messages.
+    // const stdout_file = std.io.getStdOut().writer();
+    // var bw = std.io.bufferedWriter(stdout_file);
+    // const stdout = bw.writer();
 
-    //mergeKSortedLists.mergeKSortedLists(input: []mergeKSortedLists.mergeKSortedLists.LinkedList)
+    // //mergeKSortedLists.mergeKSortedLists(input: []mergeKSortedLists.mergeKSortedLists.LinkedList)
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    // try stdout.print("Run `zig build test` to run the tests.\n", .{});
 
-    try bw.flush(); // Don't forget to flush!
+    // try bw.flush(); // Don't forget to flush!
 }
